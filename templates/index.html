@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookHaven — Online Bookstore Management System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h2>BookHaven</h2>
+          <span>RDBMS Portal</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="9"></rect>
+            <rect x="14" y="3" width="7" height="5"></rect>
+            <rect x="14" y="12" width="7" height="9"></rect>
+            <rect x="3" y="16" width="7" height="5"></rect>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-item" data-tab="books">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          <span>Books Inventory</span>
+        </button>
+
+        <button class="nav-item" data-tab="orders">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span>Orders</span>
+        </button>
+
+        <button class="nav-item" data-tab="customers">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>Customers</span>
+        </button>
+
+        <button class="nav-item" data-tab="rdbms-views">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+            <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+          </svg>
+          <span>RDBMS Views & SQL</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="db-status-card" id="db-status-card">
+          <div class="status-indicator" id="status-indicator"></div>
+          <div class="status-info">
+            <div class="status-title" id="status-title">Checking DB...</div>
+            <div class="status-sub" id="status-sub">localhost:3306</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="page-heading">Dashboard Overview</h1>
+          <p id="page-subheading">Real-time statistics and store performance</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline" id="btn-quick-customer" onclick="openModal('modal-add-customer')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Add Customer
+          </button>
+          <button class="btn btn-primary" id="btn-quick-order" onclick="openPlaceOrderModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            New Order
+          </button>
+          <button class="btn btn-accent" id="btn-quick-book" onclick="openAddBookModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            Add Book
+          </button>
+        </div>
+      </header>
+
+      <!-- Connection Alert Banner (Shown if DB has issues) -->
+      <div id="db-alert-banner" class="alert alert-warning" style="display: none;">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <strong>Database Notice:</strong>
+          <span id="db-alert-text">Unable to connect to MySQL database. Please verify BookstoreDB is running.</span>
+        </div>
+      </div>
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-content active">
+        <!-- Metric Cards -->
+        <div class="metrics-grid">
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Inventory</span>
+              <div class="metric-icon icon-blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-inventory">--</div>
+            <div class="metric-footer">
+              <span id="stat-total-titles">-- titles</span> cataloged
+            </div>
+          </div>
+
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Revenue</span>
+              <div class="metric-icon icon-green">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-revenue">$0.00</div>
+            <div class="metric-footer">
+              <span class="badge-success">ACID Verified</span> recorded sales
+            </div>
+          </div>
+
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Total Orders</span>
+              <div class="metric-icon icon-purple">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-orders">--</div>
+            <div class="metric-footer">
+              <span id="stat-units-sold">-- items</span> delivered
+            </div>
+          </div>
+
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-label">Customers</span>
+              <div class="metric-icon icon-amber">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="stat-total-customers">--</div>
+            <div class="metric-footer">
+              Unique registered buyers
+            </div>
+          </div>
+        </div>
+
+        <!-- Low Stock Alert Box -->
+        <div class="card alert-card" id="low-stock-container" style="display: none;">
+          <div class="card-header">
+            <h3>⚠️ Low Stock Inventory Warnings</h3>
+            <span class="badge badge-warning" id="low-stock-count">0 items</span>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="table-low-stock">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Current Stock</th>
+                  <th>Unit Price</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Two Column Section: Top Selling & Recent Orders -->
+        <div class="grid-2-col">
+          <div class="card">
+            <div class="card-header">
+              <h3>🏆 Top Selling Books</h3>
+              <span class="subtext">By quantity sold</span>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Copies Sold</th>
+                    <th>Revenue</th>
+                  </tr>
+                </thead>
+                <tbody id="top-selling-body">
+                  <tr><td colspan="4" class="text-center text-muted">Loading top sellers...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>⏱️ Recent Orders</h3>
+              <button class="btn btn-sm btn-outline" onclick="switchTab('orders')">View All</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Book</th>
+                    <th>Qty</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-orders-body">
+                  <tr><td colspan="5" class="text-center text-muted">Loading recent orders...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: BOOKS INVENTORY -->
+      <section id="tab-books" class="tab-content">
+        <div class="card">
+          <div class="card-header table-toolbar">
+            <div class="toolbar-left">
+              <h3>Books Inventory</h3>
+              <div class="search-box">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="books-search-input" placeholder="Search by title or author..." oninput="handleBookSearch()">
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <button class="btn btn-primary" onclick="openAddBookModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Add Book
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th>Title</th>
+                  <th>Author</th>
+                  <th>Price</th>
+                  <th>Stock Level</th>
+                  <th>Status</th>
+                  <th style="width: 140px; text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="books-table-body">
+                <tr><td colspan="7" class="text-center text-muted">Loading books...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ORDERS -->
+      <section id="tab-orders" class="tab-content">
+        <div class="card">
+          <div class="card-header table-toolbar">
+            <div class="toolbar-left">
+              <h3>Order Transactions</h3>
+              <span class="subtext">ACID-compliant sales history with customer & book joins</span>
+            </div>
+            <div class="toolbar-right">
+              <button class="btn btn-primary" onclick="openPlaceOrderModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                Place New Order
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 80px;">Order #</th>
+                  <th>Date & Time</th>
+                  <th>Customer</th>
+                  <th>Book Title</th>
+                  <th>Author</th>
+                  <th>Qty</th>
+                  <th>Unit Price</th>
+                  <th>Total Amount</th>
+                </tr>
+              </thead>
+              <tbody id="orders-table-body">
+                <tr><td colspan="8" class="text-center text-muted">Loading orders...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: CUSTOMERS -->
+      <section id="tab-customers" class="tab-content">
+        <div class="card">
+          <div class="card-header table-toolbar">
+            <div class="toolbar-left">
+              <h3>Customer Profiles</h3>
+              <span class="subtext">Registered readers & purchase histories</span>
+            </div>
+            <div class="toolbar-right">
+              <button class="btn btn-primary" onclick="openModal('modal-add-customer')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                Register Customer
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">ID</th>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>City</th>
+                  <th>Total Orders</th>
+                  <th style="width: 100px; text-align: right;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="customers-table-body">
+                <tr><td colspan="7" class="text-center text-muted">Loading customers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: RDBMS VIEWS & SQL -->
+      <section id="tab-rdbms-views" class="tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>RDBMS View: <code>CustomerOrderSummary</code></h3>
+              <span class="subtext">Demonstrates SQL Views, <code>LEFT JOIN</code>, <code>GROUP BY</code>, and Aggregates (<code>COUNT</code>, <code>SUM</code>, <code>AVG</code>)</span>
+            </div>
+            <button class="btn btn-sm btn-outline" onclick="loadCustomerSummaryView()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh View
+            </button>
+          </div>
+
+          <div class="sql-code-block">
+            <div class="sql-header">
+              <span>SQL Definition:</span>
+            </div>
+            <pre><code>CREATE VIEW CustomerOrderSummary AS
+SELECT 
+    c.CustomerID, c.FullName, c.Email, c.City,
+    COUNT(o.OrderID) AS TotalOrders,
+    COALESCE(SUM(o.QuantityOrdered), 0) AS TotalBooksPurchased,
+    COALESCE(SUM(o.TotalAmount), 0.00) AS TotalSpent,
+    COALESCE(ROUND(AVG(o.TotalAmount), 2), 0.00) AS AverageOrderValue
+FROM Customers c
+LEFT JOIN Orders o ON c.CustomerID = o.CustomerID
+GROUP BY c.CustomerID, c.FullName, c.Email, c.City;</code></pre>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Customer ID</th>
+                  <th>Customer Name</th>
+                  <th>Email</th>
+                  <th>City</th>
+                  <th>Total Orders</th>
+                  <th>Books Purchased</th>
+                  <th>Total Spent</th>
+                  <th>Avg Order Value</th>
+                </tr>
+              </thead>
+              <tbody id="view-summary-body">
+                <tr><td colspan="8" class="text-center text-muted">Loading view data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- MODALS -->
+  <!-- ============================================================= -->
+
+  <!-- Modal: Add Book -->
+  <div class="modal-backdrop" id="modal-add-book">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add New Book to Inventory</h3>
+        <button class="btn-close" onclick="closeModal('modal-add-book')">&times;</button>
+      </div>
+      <form id="form-add-book" onsubmit="handleAddBook(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="book-title">Book Title <span class="required">*</span></label>
+            <input type="text" id="book-title" class="form-input" placeholder="e.g. Sapiens: A Brief History of Humankind" required>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="book-author">Author <span class="required">*</span></label>
+              <a href="#" class="link-small" onclick="toggleQuickAuthorForm(event)">+ New Author</a>
+            </div>
+            <select id="book-author" class="form-input" required>
+              <option value="">Select an Author...</option>
+            </select>
+          </div>
+
+          <!-- Collapsible Quick Author Creation -->
+          <div id="quick-author-box" class="sub-form-box" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Author Name</label>
+                <input type="text" id="quick-author-name" class="form-input" placeholder="e.g. Stephen Hawking">
+              </div>
+              <div class="form-group">
+                <label>Country</label>
+                <input type="text" id="quick-author-country" class="form-input" placeholder="e.g. United Kingdom">
+              </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="handleQuickAuthorSubmit()">Save Author</button>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="book-price">Price ($) <span class="required">*</span></label>
+              <input type="number" id="book-price" class="form-input" step="0.01" min="0" placeholder="19.99" required>
+            </div>
+            <div class="form-group">
+              <label for="book-stock">Initial Stock <span class="required">*</span></label>
+              <input type="number" id="book-stock" class="form-input" min="0" placeholder="15" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-book')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-book">Add Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Book -->
+  <div class="modal-backdrop" id="modal-edit-book">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Book Details</h3>
+        <button class="btn-close" onclick="closeModal('modal-edit-book')">&times;</button>
+      </div>
+      <form id="form-edit-book" onsubmit="handleEditBook(event)">
+        <input type="hidden" id="edit-book-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit-book-title">Book Title <span class="required">*</span></label>
+            <input type="text" id="edit-book-title" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-book-author">Author <span class="required">*</span></label>
+            <select id="edit-book-author" class="form-input" required>
+              <option value="">Select Author...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-book-price">Price ($) <span class="required">*</span></label>
+              <input type="number" id="edit-book-price" class="form-input" step="0.01" min="0" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-book-stock">Stock Quantity <span class="required">*</span></label>
+              <input type="number" id="edit-book-stock" class="form-input" min="0" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-book')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Place Order -->
+  <div class="modal-backdrop" id="modal-place-order">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Place New Book Order</h3>
+        <button class="btn-close" onclick="closeModal('modal-place-order')">&times;</button>
+      </div>
+      <form id="form-place-order" onsubmit="handlePlaceOrder(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="order-customer">Select Customer <span class="required">*</span></label>
+            <select id="order-customer" class="form-input" required>
+              <option value="">Select Customer...</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="order-book">Select Book <span class="required">*</span></label>
+            <select id="order-book" class="form-input" required onchange="updateOrderPreview()">
+              <option value="">Select Book...</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="order-qty">Quantity <span class="required">*</span></label>
+              <input type="number" id="order-qty" class="form-input" min="1" value="1" required oninput="updateOrderPreview()">
+            </div>
+            <div class="form-group">
+              <label>Stock Available</label>
+              <div id="order-stock-display" class="stock-pill">--</div>
+            </div>
+          </div>
+
+          <!-- Calculation Preview Box -->
+          <div class="order-summary-box">
+            <div class="summary-line">
+              <span>Unit Price:</span>
+              <strong id="order-unit-price">$0.00</strong>
+            </div>
+            <div class="summary-line total-line">
+              <span>Calculated Total:</span>
+              <strong id="order-total-price">$0.00</strong>
+            </div>
+            <div class="summary-note">
+              <span>⚡ Deducts inventory in an ACID transaction</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-place-order')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-order">Confirm & Place Order</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Add Customer -->
+  <div class="modal-backdrop" id="modal-add-customer">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Register New Customer</h3>
+        <button class="btn-close" onclick="closeModal('modal-add-customer')">&times;</button>
+      </div>
+      <form id="form-add-customer" onsubmit="handleAddCustomer(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="cust-name">Full Name <span class="required">*</span></label>
+            <input type="text" id="cust-name" class="form-input" placeholder="e.g. John Doe" required>
+          </div>
+
+          <div class="form-group">
+            <label for="cust-email">Email Address <span class="required">*</span></label>
+            <input type="email" id="cust-email" class="form-input" placeholder="e.g. john@example.com" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cust-phone">Phone Number <span class="required">*</span></label>
+              <input type="text" id="cust-phone" class="form-input" placeholder="+1-555-0199" required>
+            </div>
+            <div class="form-group">
+              <label for="cust-city">City <span class="required">*</span></label>
+              <input type="text" id="cust-city" class="form-input" placeholder="New York" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-add-customer')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Register Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- App Script -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
